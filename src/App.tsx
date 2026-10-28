@@ -9,6 +9,8 @@ import Tabs from './components/Tabs'
 import SectionCard from './components/SectionCard'
 import AddInline from './components/AddInline'
 import ReminderPicker from './components/ReminderPicker'
+import SettingsDialog from './components/SettingsDialog'
+import { useCollapsed, useSettings } from './lib/settings'
 
 export default function App() {
   const [session, setSession] = useState<Session | null>(null)
@@ -36,6 +38,9 @@ function Board({ userId, email }: { userId: string; email?: string }) {
   const [undo, setUndo] = useState<Task | null>(null)
   const undoTimer = useRef<number>()
   const reminders = useReminders(tasks)
+  const [settings, updateSettings] = useSettings()
+  const [collapsedMap, setCollapsed] = useCollapsed()
+  const [showSettings, setShowSettings] = useState(false)
 
   const active = pages.find(p => p.id === activeId) ?? pages[0] ?? null
   useEffect(() => {
@@ -53,15 +58,21 @@ function Board({ userId, email }: { userId: string; email?: string }) {
   }
 
   return (
-    <div className="app" style={{ ['--c' as string]: color.hex, ['--soft' as string]: color.soft }}>
+    <div
+      className={`app layout-${settings.layout} density-${settings.density}`}
+      style={{ ['--c' as string]: color.hex, ['--soft' as string]: color.soft }}
+    >
       <header className="topbar">
         <div className="brand">
           <img src={import.meta.env.BASE_URL + 'favicon.svg'} alt="" />
           <span>Nudge</span>
         </div>
-        {configured && (
-          <button className="ghost small" onClick={() => supabase.auth.signOut()} title={email}>התנתק</button>
-        )}
+        <div className="top-actions">
+          <button className="ghost" onClick={() => setShowSettings(true)} aria-label="הגדרות" title="הגדרות">⚙️</button>
+          {configured && (
+            <button className="ghost small" onClick={() => supabase.auth.signOut()} title={email}>התנתק</button>
+          )}
+        </div>
       </header>
 
       <Tabs
@@ -102,10 +113,17 @@ function Board({ userId, email }: { userId: string; email?: string }) {
                 <p className="muted">הדף ריק. הוסף כותרת (למשל שם קורס) ואז משימות מתחתיה 👇</p>
               </div>
             )}
-            {pageSections.map(s => (
+            <div className="sections">
+            {pageSections.map(s => {
+              const sTasks = tasks.filter(t => t.section_id === s.id)
+              // auto-collapse a fully completed section unless the user chose otherwise
+              const collapsed = collapsedMap[s.id] ?? (sTasks.length > 0 && sTasks.every(t => t.done))
+              return (
               <SectionCard
                 key={s.id} section={s}
-                tasks={tasks.filter(t => t.section_id === s.id)}
+                tasks={sTasks}
+                collapsed={collapsed}
+                onToggleCollapsed={() => setCollapsed(s.id, !collapsed)}
                 onRename={title => data.updateSection(s.id, title)}
                 onDelete={() => data.deleteSection(s.id)}
                 onAddTask={title => data.addTask(s.id, title)}
@@ -114,11 +132,17 @@ function Board({ userId, email }: { userId: string; email?: string }) {
                 onDeleteTask={deleteTask}
                 onRemind={setRemindTask}
               />
-            ))}
+              )
+            })}
+            </div>
             <AddInline className="new-section" placeholder="כותרת חדשה (נושא / קורס)…" onAdd={title => data.addSection(active.id, title)} />
           </>
         )}
       </main>
+
+      {showSettings && (
+        <SettingsDialog settings={settings} onChange={updateSettings} onClose={() => setShowSettings(false)} />
+      )}
 
       {remindTask && (
         <ReminderPicker

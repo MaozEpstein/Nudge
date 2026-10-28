@@ -13,6 +13,8 @@ type Props = {
   onEditTask: (t: Task, title: string) => void
   onDeleteTask: (t: Task) => void
   onRemind: (t: Task) => void
+  collapsed: boolean
+  onToggleCollapsed: () => void
 }
 
 export default function SectionCard(p: Props) {
@@ -26,8 +28,12 @@ export default function SectionCard(p: Props) {
   }
 
   return (
-    <section className="card">
+    <section className={'card' + (p.collapsed ? ' collapsed' : '')}>
       <header className="card-head">
+        <button
+          className="icon-btn chevron" onClick={p.onToggleCollapsed}
+          aria-label={p.collapsed ? 'פתח כותרת' : 'כווץ כותרת'} aria-expanded={!p.collapsed}
+        >▾</button>
         {editing ? (
           <input
             className="edit-input title-input" autoFocus defaultValue={p.section.title}
@@ -43,16 +49,20 @@ export default function SectionCard(p: Props) {
       {p.tasks.length > 0 && (
         <div className="progress"><div style={{ width: `${(doneCount / p.tasks.length) * 100}%` }} /></div>
       )}
-      <ul className="tasks">
-        {[...open, ...done].map(t => (
-          <TaskItem
-            key={t.id} task={t}
-            onToggle={() => p.onToggle(t)} onDelete={() => p.onDeleteTask(t)}
-            onEdit={title => p.onEditTask(t, title)} onRemind={() => p.onRemind(t)}
-          />
-        ))}
-      </ul>
-      <AddInline placeholder="משימה חדשה…" onAdd={p.onAddTask} />
+      {!p.collapsed && (
+        <>
+          <ul className="tasks">
+            {[...open, ...done].map(t => (
+              <TaskItem
+                key={t.id} task={t}
+                onToggle={() => p.onToggle(t)} onDelete={() => p.onDeleteTask(t)}
+                onEdit={title => p.onEditTask(t, title)} onRemind={() => p.onRemind(t)}
+              />
+            ))}
+          </ul>
+          <AddInline placeholder="משימה חדשה…" onAdd={p.onAddTask} />
+        </>
+      )}
     </section>
   )
 }

@@ -181,3 +181,45 @@ h1, h2, h3, p { margin: 0; }
 .spinner { width: 34px; height: 34px; border-radius: 50%; border: 4px solid var(--line); border-top-color: var(--c); animation: spin 0.8s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 .center-inline { display: grid; place-items: center; padding: 60px; }
+
+/* ---- layout: columns (default) vs single ---- */
+.top-actions { display: flex; align-items: center; gap: 4px; }
+.sections { display: block; }
+.layout-columns { max-width: 1280px; }
+.layout-columns .sections { column-width: 330px; column-gap: 16px; }
+.layout-columns .card { break-inside: avoid; }
+.layout-single { max-width: 720px; }
+.layout-columns .new-section { max-width: 420px; }
+
+/* ---- density ---- */
+.density-compact .card { padding: 12px 12px 6px; margin-bottom: 14px; }
+.density-compact .card-head h2 { font-size: 17px; padding: 2px 0; }
+.density-compact .task { min-height: 40px; padding: 4px 4px 4px 2px; gap: 8px; }
+.density-compact .task-wrap { margin: 2px 0; }
+.density-compact .check { width: 24px; height: 24px; border-width: 2px; }
+.density-compact .check svg { width: 16px; height: 16px; }
+.density-compact .icon-btn { width: 32px; height: 32px; }
+.density-compact .add-inline input { min-height: 38px; padding: 6px 4px; }
+.density-compact .progress { margin: 6px 0 4px; }
+.density-compact .task-title { font-size: 15.5px; }
+
+/* ---- collapsible sections ---- */
+.chevron { opacity: 0.6; font-size: 18px; transition: transform 0.2s; margin-inline-start: -6px; }
+.card.collapsed .chevron { transform: rotate(90deg); } /* RTL: points toward the start side when collapsed */
+.card.collapsed { padding-bottom: 12px; }
+.card.collapsed .progress { margin-bottom: 0; }
+.card.collapsed .card-head h2 { color: var(--muted); }
+
+/* ---- completed tasks stay visible with a clear green check ---- */
+.task.done { opacity: 1; }
+.task.done .check { background: #22c55e; border-color: #22c55e; }
+.task.done .task-title { color: var(--muted); text-decoration-color: rgba(138, 132, 163, 0.7); }
+
+/* ---- settings dialog ---- */
+.setting { display: flex; flex-direction: column; gap: 8px; }
+.setting > label { font-weight: 600; }
+.choices { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.choice { display: flex; flex-direction: column; gap: 2px; text-align: start; padding: 12px; border-radius: 14px; border: 2px solid var(--line); transition: border-color 0.15s, background 0.15s; }
+.choice span { font-size: 13px; color: var(--muted); }
+.choice.on { border-color: var(--c); background: var(--soft); }
+.choice.on b { color: var(--c); }
