@@ -20,6 +20,7 @@ import ReminderPicker from './components/ReminderPicker'
 import SettingsDialog from './components/SettingsDialog'
 import SearchDialog from './components/SearchDialog'
 import QuickAdd from './components/QuickAdd'
+import SnoozeDialog from './components/SnoozeDialog'
 import { formatRemind } from './components/TaskItem'
 
 export default function App() {
@@ -71,6 +72,9 @@ function Board({ userId, email, onExitGuest }: { userId: string; email?: string;
     try { return localStorage.getItem('nudge-active') } catch { return null }
   })
   const [remindTask, setRemindTask] = useState<Task | null>(null)
+  const [snoozeTask, setSnoozeTask] = useState<Task | null>(null)
+  const pendingAction = useRef<{ taskId: string; action: string } | null>(null)
+  const [pendingTick, setPendingTick] = useState(0)
   const [toast, setToast] = useState<Toast | null>(null)
   const toastTimer = useRef<number>()
   const reminders = useReminders(tasks)
@@ -120,6 +124,37 @@ function Board({ userId, email, onExitGuest }: { userId: string; email?: string;
       showToast(`🔁 חוזרת ב-${formatRemind(next)}`)
     } else data.updateTask(t.id, { done: !t.done })
   }
+
+  // Actions chosen on a notification arrive via URL (app was closed) or a message from the service worker (app open).
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const taskId = params.get('task')
+    const action = params.get('action')
+    if (taskId && action) {
+      pendingAction.current = { taskId, action }
+      setPendingTick(n => n + 1)
+      window.history.replaceState(null, '', window.location.pathname)
+    }
+    const onMessage = (e: MessageEvent) => {
+      if (e.data?.type !== 'nudge-action') return
+      pendingAction.current = { taskId: e.data.taskId, action: e.data.action }
+      setPendingTick(n => n + 1)
+    }
+    navigator.serviceWorker?.addEventListener('message', onMessage)
+    return () => navigator.serviceWorker?.removeEventListener('message', onMessage)
+  }, [])
+
+  useEffect(() => {
+    const p = pendingAction.current
+    if (!p) return
+    const t = tasks.find(x => x.id === p.taskId)
+    if (!t) { if (!data.loading) pendingAction.current = null; return } // wait for data; drop if the task is gone
+    pendingAction.current = null
+    reminders.dismiss(t.id)
+    if (p.action === 'done') {
+      if (!t.done) { toggleTask(t); showToast('✓ סומנה כבוצעה') }
+    } else if (p.action === 'snooze') setSnoozeTask(t)
+  }, [tasks, pendingTick, data.loading])
 
   const deleteTask = (t: Task) => {
     data.deleteTask(t.id)
@@ -232,8 +267,9 @@ function Board({ userId, email, onExitGuest }: { userId: string; email?: string;
             <div className="reminder-banner" key={t.id}>
               <span>⏰ <b>{t.title}</b></span>
               <span className="banner-actions">
-                <button onClick={() => { toggleTask(t); reminders.dismiss(t.id) }}>בוצע</button>
-                <button onClick={() => reminders.dismiss(t.id)}>סגור</button>
+                <button onClick={() => { toggleTask(t); reminders.dismiss(t.id) }}>✓ בוצע</button>
+                <button onClick={() => setSnoozeTask(t)}>⏰ דחה</button>
+                <button onClick={() => reminders.dismiss(t.id)}>התעלם</button>
               </span>
             </div>
           ))}
@@ -311,6 +347,18 @@ function Board({ userId, email, onExitGuest }: { userId: string; email?: string;
               return sid
             }}
             onClose={() => setShowQuick(false)}
+          />
+        )}
+
+        {snoozeTask && (
+          <SnoozeDialog
+            task={snoozeTask}
+            onSnooze={iso => {
+              data.updateTask(snoozeTask.id, { remind_at: iso })
+              reminders.dismiss(snoozeTask.id)
+              showToast(`⏰ נדחתה ל-${formatRemind(iso)}`)
+            }}
+            onClose={() => setSnoozeTask(null)}
           />
         )}
 

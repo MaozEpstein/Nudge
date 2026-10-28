@@ -31,7 +31,7 @@ Deno.serve(async req => {
 
   let sent = 0
   for (const task of due) {
-    const payload = JSON.stringify({ title: 'תזכורת – Nudge', body: task.title, tag: task.id })
+    const payload = JSON.stringify({ title: 'תזכורת – Nudge', body: task.title, taskId: task.id })
     for (const sub of (subs ?? []).filter(s => s.user_id === task.user_id)) {
       try {
         await webpush.sendNotification({ endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } }, payload)

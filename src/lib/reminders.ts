@@ -21,9 +21,11 @@ export async function ensureNotificationPermission(): Promise<NotificationPermis
 
 async function notify(task: Task) {
   if (!notificationsSupported() || Notification.permission !== 'granted') return
-  const opts: NotificationOptions = {
+  const opts = {
     body: task.title, icon: 'icon-192.png', badge: 'icon-192.png', tag: task.id, lang: 'he', dir: 'rtl',
-  }
+    data: { taskId: task.id }, requireInteraction: true, vibrate: [200, 100, 200],
+    actions: [{ action: 'done', title: '✓ בוצע' }, { action: 'snooze', title: '⏰ דחה' }],
+  } as NotificationOptions
   try {
     const reg = await navigator.serviceWorker?.getRegistration()
     if (reg) await reg.showNotification('תזכורת – Nudge', opts)
