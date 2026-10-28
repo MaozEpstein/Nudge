@@ -9,17 +9,20 @@ const toLocalInput = (d: Date) =>
   `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
 
 export default function ReminderPicker({ task, onSave, onClose }: Props) {
-  const initial = task.remind_at ? new Date(task.remind_at) : new Date(Date.now() + 3600_000)
+  const initial = task.remind_at ? new Date(task.remind_at) : new Date() // default: right now
   const [value, setValue] = useState(toLocalInput(initial))
   const [repeat, setRepeat] = useState<Repeat | null>(task.repeat)
   const [perm, setPerm] = useState<string>('')
 
   const quick = (d: Date) => setValue(toLocalInput(d))
+  const startOfMinute = () => { const d = new Date(); d.setSeconds(0, 0); return d }
+  const isPast = !!value && new Date(value) < startOfMinute() // the current minute still counts as "now"
   const inHour = () => quick(new Date(Date.now() + 3600_000))
   const evening = () => { const d = new Date(); d.setHours(19, 0, 0, 0); if (d < new Date()) d.setDate(d.getDate() + 1); quick(d) }
   const tomorrow = () => { const d = new Date(); d.setDate(d.getDate() + 1); d.setHours(9, 0, 0, 0); quick(d) }
 
   const save = async () => {
+    if (isPast) return
     const p = await ensureNotificationPermission()
     onSave(new Date(value).toISOString(), repeat)
     if (p === 'denied' || p === 'unsupported') {
@@ -41,6 +44,7 @@ export default function ReminderPicker({ task, onSave, onClose }: Props) {
           <button onClick={tomorrow}>מחר 09:00</button>
         </div>
         <input type="datetime-local" value={value} onChange={e => setValue(e.target.value)} dir="ltr" />
+        {isPast && <p className="warn">⚠️ הזמן שבחרת כבר עבר. בחר זמן עתידי כדי שהתזכורת תופיע.</p>}
         <div className="setting">
           <label>🔁 חזרה</label>
           <div className="quick">
@@ -53,7 +57,7 @@ export default function ReminderPicker({ task, onSave, onClose }: Props) {
         </div>
         {perm && <p className="notice small">{perm}</p>}
         <div className="dialog-actions">
-          <button className="primary" onClick={save} disabled={!value}>שמור</button>
+          <button className="primary" onClick={save} disabled={!value || isPast}>שמור</button>
           {task.remind_at && <button className="ghost danger" onClick={() => { onSave(null, null); onClose() }}>הסר תזכורת</button>}
           <button className="ghost" onClick={onClose}>ביטול</button>
         </div>

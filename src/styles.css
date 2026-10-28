@@ -369,3 +369,5 @@ h1, h2, h3, p { margin: 0; }
 
 .guest { color: var(--muted); padding: 10px 14px; border-radius: 12px; font-weight: 500; }
 .guest:hover { background: var(--soft); color: var(--ink); }
+
+.warn { background: color-mix(in srgb, var(--danger) 12%, var(--surface)); color: var(--danger); border-radius: 12px; padding: 8px 12px; font-size: 14px; font-weight: 500; }
