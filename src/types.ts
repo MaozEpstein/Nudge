@@ -30,13 +30,13 @@ export const REPEAT_LABELS: Record<Repeat, string> = {
   monthly: 'כל חודש',
 }
 
-// Muted, layered hues. hex = accent, soft = light tint, ink = darker readable text tone.
+// Calm, slightly muted hues. hex = accent, soft = light tint, ink = darker readable text tone.
 export const COLORS: Record<string, { name: string; hex: string; soft: string; ink: string }> = {
-  violet: { name: 'שזיף', hex: '#8a4f7d', soft: '#f3e6ef', ink: '#6b3560' },
-  blue: { name: 'כחול אבק', hex: '#4a6a9c', soft: '#e4ebf5', ink: '#2f4a78' },
-  teal: { name: 'ירוק ים', hex: '#2a8078', soft: '#dff0ed', ink: '#1d5f5a' },
-  green: { name: 'מרווה', hex: '#6f8f4e', soft: '#ecf0df', ink: '#4d6a33' },
-  gold: { name: 'חרדל', hex: '#c99a2e', soft: '#f6ecd0', ink: '#8f6a14' },
-  orange: { name: 'טרקוטה', hex: '#cf6a3f', soft: '#f9e6dc', ink: '#a3482a' },
-  pink: { name: 'ורוד אבק', hex: '#c4577a', soft: '#f8e3ea', ink: '#9a3558' },
+  violet: { name: 'אינדיגו', hex: '#5f65b0', soft: '#eceefa', ink: '#3f4585' },
+  blue: { name: 'תכלת', hex: '#3b82b6', soft: '#e5f1f8', ink: '#24618f' },
+  teal: { name: 'ירוק ים', hex: '#2a8a7e', soft: '#e0f2ef', ink: '#1b665d' },
+  green: { name: 'מרווה', hex: '#5f9150', soft: '#e9f1e5', ink: '#3f6b33' },
+  gold: { name: 'חרדל', hex: '#c28f1f', soft: '#f8efd5', ink: '#85600a' },
+  orange: { name: 'אלמוג', hex: '#d9714b', soft: '#fbe9e1', ink: '#a34a28' },
+  pink: { name: 'ורדרד', hex: '#c95b82', soft: '#f9e5ec', ink: '#9a3a5e' },
 }

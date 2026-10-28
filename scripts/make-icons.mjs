@@ -41,7 +41,7 @@ function makePng(size) {
       const inside = Math.hypot(x - cx, y - cy) <= r
       // gradient violet -> blue
       const t = (x + y) / (2 * size)
-      let R = 138 + (207 - 138) * t, G = 79 + (106 - 79) * t, B = 125 + (63 - 125) * t
+      let R = 95 + (42 - 95) * t, G = 101 + (138 - 101) * t, B = 176 + (126 - 176) * t
       // white check mark
       const u = x / size, v = y / size
       const d = Math.min(
