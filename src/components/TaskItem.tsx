@@ -45,11 +45,14 @@ export default function TaskItem({ task, onToggle, onDelete, onEdit, onRemind }:
     start.current = null
     if (!s?.locked) return
     setDragging(false)
-    if (Math.abs(dx) > THRESHOLD) {
+    if (dx < -THRESHOLD) { // swipe left: delete
       setLeaving(true)
-      setDx(dx > 0 ? 500 : -500)
+      setDx(-500)
       window.setTimeout(onDelete, 220)
-    } else setDx(0)
+    } else {
+      if (dx > THRESHOLD) onToggle() // swipe right: done / not done
+      setDx(0)
+    }
   }
 
   const reveal = Math.min(Math.abs(dx) / THRESHOLD, 1)
@@ -60,7 +63,9 @@ export default function TaskItem({ task, onToggle, onDelete, onEdit, onRemind }:
       className={'task-wrap' + (leaving ? ' leaving' : '') + (sortable.isDragging ? ' sorting' : '')}
       style={{ transform: CSS.Transform.toString(sortable.transform), transition: sortable.transition }}
     >
-      <div className="task-bg" style={{ opacity: reveal }}>🗑 מחק</div>
+      <div className={'task-bg ' + (dx > 0 ? 'ok' : 'bad')} style={{ opacity: reveal }}>
+        {dx > 0 ? (task.done ? '↩ לא בוצע' : '✓ בוצע') : '🗑 מחק'}
+      </div>
       <div
         className={'task' + (task.done ? ' done' : '') + (dragging ? ' dragging' : '')}
         style={{ transform: `translateX(${dx}px)` }}

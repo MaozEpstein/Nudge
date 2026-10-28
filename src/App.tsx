@@ -25,6 +25,13 @@ import { formatRemind } from './components/TaskItem'
 export default function App() {
   const [session, setSession] = useState<Session | null>(null)
   const [ready, setReady] = useState(!configured)
+  const [guest, setGuestState] = useState(() => {
+    try { return localStorage.getItem('nudge-guest') === '1' } catch { return false }
+  })
+  const setGuest = (on: boolean) => {
+    setGuestState(on)
+    try { on ? localStorage.setItem('nudge-guest', '1') : localStorage.removeItem('nudge-guest') } catch { /* ignore */ }
+  }
 
   useEffect(() => {
     if (!configured) return
@@ -34,8 +41,9 @@ export default function App() {
   }, [])
 
   if (!ready) return <div className="center-screen"><div className="spinner" /></div>
-  if (configured && !session) return <Login />
-  return <Board userId={session?.user.id ?? 'local'} email={session?.user.email} />
+  if (configured && !session && !guest) return <Login onGuest={() => setGuest(true)} />
+  const userId = session?.user.id ?? 'local'
+  return <Board userId={userId} email={session?.user.email} onExitGuest={userId === 'local' && configured ? () => setGuest(false) : undefined} />
 }
 
 // Each drag type only collides with compatible drop targets; for tasks, a task row wins over its section.
@@ -56,7 +64,7 @@ const collide: CollisionDetection = args => {
 type Toast = { message: string; undo?: () => void }
 type Ghost = { kind: 'task' | 'section' | 'page'; html: string; width: number; height: number }
 
-function Board({ userId, email }: { userId: string; email?: string }) {
+function Board({ userId, email, onExitGuest }: { userId: string; email?: string; onExitGuest?: () => void }) {
   const data = useData(userId)
   const { pages, sections, tasks } = data
   const [activeId, setActiveId] = useState<string | null>(() => {
@@ -195,7 +203,9 @@ function Board({ userId, email }: { userId: string; email?: string }) {
           <div className="top-actions">
             <button className="ghost" onClick={() => setShowSearch(true)} aria-label="חיפוש" title="חיפוש ( / )">🔍</button>
             <button className="ghost" onClick={() => setShowSettings(true)} aria-label="הגדרות" title="הגדרות">⚙️</button>
-            {configured && (
+            {onExitGuest ? (
+              <button className="ghost small" onClick={onExitGuest}>התחבר</button>
+            ) : configured && (
               <button className="ghost small" onClick={() => supabase.auth.signOut()} title={email}>התנתק</button>
             )}
           </div>
@@ -208,8 +218,12 @@ function Board({ userId, email }: { userId: string; email?: string }) {
         />
 
         <main>
-          {!configured && (
-            <p className="notice small">מצב מקומי: הנתונים נשמרים רק בדפדפן הזה. חבר Supabase כדי לסנכרן בין מכשירים (ראה README).</p>
+          {userId === 'local' && (
+            <p className="notice small">
+              {configured
+                ? 'מצב אורח: המשימות נשמרות רק בדפדפן הזה. התחבר (למעלה) כדי לסנכרן בין מכשירים.'
+                : 'מצב מקומי: הנתונים נשמרים רק בדפדפן הזה. חבר Supabase כדי לסנכרן בין מכשירים (ראה README).'}
+            </p>
           )}
           {data.error && (
             <p className="error-banner" onClick={data.clearError}>⚠️ {data.error} <u>סגור</u></p>

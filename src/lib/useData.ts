@@ -69,21 +69,22 @@ const isNetworkError = (msg: string) => !navigator.onLine || /fetch|network|load
 
 // All app data + optimistic CRUD, offline queue and realtime sync with Supabase.
 export function useData(userId: string) {
+  const cloud = configured && userId !== 'local' // guests and unconfigured builds keep data on this device
   const [initial] = useState<Snapshot | null>(() =>
-    configured ? readJson<Snapshot | null>(cacheKey(userId), null) : readJson<Snapshot | null>(LOCAL_KEY, null) ?? seed())
+    cloud ? readJson<Snapshot | null>(cacheKey(userId), null) : readJson<Snapshot | null>(LOCAL_KEY, null) ?? seed())
   const [pages, setPages] = useState<Page[]>(initial?.pages ?? [])
   const [sections, setSections] = useState<Section[]>(initial?.sections ?? [])
   const [tasks, setTasks] = useState<Task[]>(initial?.tasks ?? [])
   const [loading, setLoading] = useState(!initial)
   const [error, setError] = useState<string | null>(null)
-  const outbox = useRef<Op[]>(configured ? readJson<Op[]>(outboxKey(userId), []) : [])
+  const outbox = useRef<Op[]>(cloud ? readJson<Op[]>(outboxKey(userId), []) : [])
   const [unsynced, setUnsynced] = useState(outbox.current.length > 0)
   const flushing = useRef(false)
 
   // keep a local copy: offline cache (Supabase mode) or the data itself (local mode)
   useEffect(() => {
     if (loading) return
-    writeJson(configured ? cacheKey(userId) : LOCAL_KEY, { pages, sections, tasks })
+    writeJson(cloud ? cacheKey(userId) : LOCAL_KEY, { pages, sections, tasks })
   }, [pages, sections, tasks, loading, userId])
 
   const exec = useCallback((op: Op) => {
@@ -94,7 +95,7 @@ export function useData(userId: string) {
 
   // Send queued writes in order. Stops on network errors (kept for retry). Returns true if a resync is needed.
   const flush = useCallback(async (): Promise<boolean> => {
-    if (!configured || flushing.current) return false
+    if (!cloud || flushing.current) return false
     flushing.current = true
     let resync = false
     try {
@@ -117,7 +118,7 @@ export function useData(userId: string) {
   }, [exec, userId])
 
   const load = useCallback(async () => {
-    if (!configured) return
+    if (!cloud) return
     if (outbox.current.length) { await flush(); if (outbox.current.length) return } // never overwrite unsent changes
     const [p, s, t] = await Promise.all([
       supabase.from('pages').select('id,name,color,position').order('position'),
@@ -138,7 +139,7 @@ export function useData(userId: string) {
   }, [flush])
 
   useEffect(() => {
-    if (!configured) return
+    if (!cloud) return
     load()
     let timer: number | undefined
     const refresh = () => {
@@ -164,7 +165,7 @@ export function useData(userId: string) {
   }, [load])
 
   const enqueue = useCallback((op: Op) => {
-    if (!configured) return
+    if (!cloud) return
     outbox.current.push(op)
     writeJson(outboxKey(userId), outbox.current)
     setUnsynced(true)
