@@ -18,40 +18,40 @@ body, .app { --soft: var(--soft-l); --ink: var(--ink-l); }
 
 :root { color-scheme: light; }
 :root[data-theme="dark"] {
-  --bg1: #17171a;
-  --bg2: #18181c;
-  --bg3: #1a1a1f;
-  --surface: #222226;
-  --text: #ececf0;
-  --muted: #9c9ca6;
-  --line: #35353c;
+  --bg1: #13162a;
+  --bg2: #171a33;
+  --bg3: #1c1a36;
+  --surface: #1f2442;
+  --text: #eceefa;
+  --muted: #a3a9cc;
+  --line: #323859;
   --danger: #e5645f;
-  --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 4px 14px rgba(0, 0, 0, 0.25);
+  --shadow: 0 1px 2px rgba(5, 6, 20, 0.35), 0 8px 24px rgba(5, 6, 20, 0.3);
   color-scheme: dark;
 }
 :root[data-theme="dark"] body, :root[data-theme="dark"] .app {
-  --soft: color-mix(in srgb, var(--c) 20%, var(--surface));
-  --ink: color-mix(in srgb, var(--c) 45%, #ffffff);
+  --soft: color-mix(in srgb, var(--c) 24%, var(--surface));
+  --ink: color-mix(in srgb, var(--c) 40%, #ffffff);
 }
-:root[data-theme="dark"] .tab:not(.active) { background: rgba(255, 255, 255, 0.05); }
+:root[data-theme="dark"] .tab:not(.active) { background: rgba(255, 255, 255, 0.06); }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg1: #17171a;
-    --bg2: #18181c;
-    --bg3: #1a1a1f;
-    --surface: #222226;
-    --text: #ececf0;
-    --muted: #9c9ca6;
-    --line: #35353c;
+    --bg1: #13162a;
+    --bg2: #171a33;
+    --bg3: #1c1a36;
+    --surface: #1f2442;
+    --text: #eceefa;
+    --muted: #a3a9cc;
+    --line: #323859;
     --danger: #e5645f;
-    --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 4px 14px rgba(0, 0, 0, 0.25);
+    --shadow: 0 1px 2px rgba(5, 6, 20, 0.35), 0 8px 24px rgba(5, 6, 20, 0.3);
     color-scheme: dark;
   }
   :root:not([data-theme="light"]) body, :root:not([data-theme="light"]) .app {
-    --soft: color-mix(in srgb, var(--c) 20%, var(--surface));
-    --ink: color-mix(in srgb, var(--c) 45%, #ffffff);
+    --soft: color-mix(in srgb, var(--c) 24%, var(--surface));
+    --ink: color-mix(in srgb, var(--c) 40%, #ffffff);
   }
-  :root:not([data-theme="light"]) .tab:not(.active) { background: rgba(255, 255, 255, 0.05); }
+  :root:not([data-theme="light"]) .tab:not(.active) { background: rgba(255, 255, 255, 0.06); }
 }
 
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -328,3 +328,23 @@ h1, h2, h3, p { margin: 0; }
 .switch.on .knob { background: var(--c); }
 .switch.on .knob::after { inset-inline-start: 23px; }
 .error.small { margin-top: 4px; }
+
+/* ---- dark mode depth: midnight-blue surfaces with a soft glow from the page accent ---- */
+:root[data-theme="dark"] .app::before {
+  content: ''; position: fixed; inset: 0; z-index: -1; pointer-events: none;
+  background:
+    radial-gradient(900px 480px at 85% -12%, color-mix(in srgb, var(--c) 16%, transparent), transparent 70%),
+    radial-gradient(700px 480px at 0% 108%, color-mix(in srgb, #4f7cff 9%, transparent), transparent 70%);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .app::before {
+    content: ''; position: fixed; inset: 0; z-index: -1; pointer-events: none;
+    background:
+    radial-gradient(900px 480px at 85% -12%, color-mix(in srgb, var(--c) 16%, transparent), transparent 70%),
+    radial-gradient(700px 480px at 0% 108%, color-mix(in srgb, #4f7cff 9%, transparent), transparent 70%);
+  }
+}
+:root[data-theme="dark"] .card { background: linear-gradient(180deg, color-mix(in srgb, var(--c) 7%, var(--surface)), var(--surface) 90px); }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .card { background: linear-gradient(180deg, color-mix(in srgb, var(--c) 7%, var(--surface)), var(--surface) 90px); }
+}

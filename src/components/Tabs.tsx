@@ -21,7 +21,7 @@ function SortableTab({ page, active, onClick }: { page: Page; active: boolean; o
       role="tab" aria-selected={active}
       className={'tab' + (active ? ' active' : '') + (s.isDragging ? ' sorting' : '')}
       style={{
-        ['--c' as string]: c.hex, ['--soft' as string]: c.soft,
+        ['--c' as string]: c.hex,
         transform: CSS.Transform.toString(s.transform), transition: s.transition,
       }}
       onClick={onClick}
