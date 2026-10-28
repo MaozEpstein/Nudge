@@ -1,8 +1,8 @@
 import { useState } from 'react'
-import type { Task } from '../types'
+import { REPEAT_LABELS, type Repeat, type Task } from '../types'
 import { ensureNotificationPermission } from '../lib/reminders'
 
-type Props = { task: Task; onSave: (iso: string | null) => void; onClose: () => void }
+type Props = { task: Task; onSave: (iso: string | null, repeat: Repeat | null) => void; onClose: () => void }
 
 const pad = (n: number) => String(n).padStart(2, '0')
 const toLocalInput = (d: Date) =>
@@ -11,6 +11,7 @@ const toLocalInput = (d: Date) =>
 export default function ReminderPicker({ task, onSave, onClose }: Props) {
   const initial = task.remind_at ? new Date(task.remind_at) : new Date(Date.now() + 3600_000)
   const [value, setValue] = useState(toLocalInput(initial))
+  const [repeat, setRepeat] = useState<Repeat | null>(task.repeat)
   const [perm, setPerm] = useState<string>('')
 
   const quick = (d: Date) => setValue(toLocalInput(d))
@@ -20,13 +21,12 @@ export default function ReminderPicker({ task, onSave, onClose }: Props) {
 
   const save = async () => {
     const p = await ensureNotificationPermission()
+    onSave(new Date(value).toISOString(), repeat)
     if (p === 'denied' || p === 'unsupported') {
       setPerm('ההתראות חסומות בדפדפן – התזכורת תופיע בתוך האפליקציה בלבד.')
-      onSave(new Date(value).toISOString())
       window.setTimeout(onClose, 1800)
       return
     }
-    onSave(new Date(value).toISOString())
     onClose()
   }
 
@@ -41,10 +41,20 @@ export default function ReminderPicker({ task, onSave, onClose }: Props) {
           <button onClick={tomorrow}>מחר 09:00</button>
         </div>
         <input type="datetime-local" value={value} onChange={e => setValue(e.target.value)} dir="ltr" />
+        <div className="setting">
+          <label>🔁 חזרה</label>
+          <div className="quick">
+            <button className={repeat === null ? 'on' : ''} onClick={() => setRepeat(null)}>ללא</button>
+            {(Object.keys(REPEAT_LABELS) as Repeat[]).map(r => (
+              <button key={r} className={repeat === r ? 'on' : ''} onClick={() => setRepeat(r)}>{REPEAT_LABELS[r]}</button>
+            ))}
+          </div>
+          {repeat && <p className="muted small">כשתסמן את המשימה כבוצעה, היא תחזור אוטומטית למועד הבא.</p>}
+        </div>
         {perm && <p className="notice small">{perm}</p>}
         <div className="dialog-actions">
           <button className="primary" onClick={save} disabled={!value}>שמור</button>
-          {task.remind_at && <button className="ghost danger" onClick={() => { onSave(null); onClose() }}>הסר תזכורת</button>}
+          {task.remind_at && <button className="ghost danger" onClick={() => { onSave(null, null); onClose() }}>הסר תזכורת</button>}
           <button className="ghost" onClick={onClose}>ביטול</button>
         </div>
       </div>

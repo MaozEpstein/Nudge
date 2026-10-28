@@ -1,5 +1,7 @@
 import { useRef, useState } from 'react'
-import type { Task } from '../types'
+import { useSortable } from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
+import { REPEAT_LABELS, type Task } from '../types'
 
 type Props = {
   task: Task
@@ -20,6 +22,8 @@ export default function TaskItem({ task, onToggle, onDelete, onEdit, onRemind }:
   const [leaving, setLeaving] = useState(false)
   const [editing, setEditing] = useState(false)
   const start = useRef<{ x: number; y: number; locked: boolean | null } | null>(null)
+
+  const sortable = useSortable({ id: task.id, data: { type: 'task', sectionId: task.section_id } })
 
   const onDown = (e: React.PointerEvent) => {
     if ((e.target as HTMLElement).closest('button,input')) return
@@ -51,7 +55,11 @@ export default function TaskItem({ task, onToggle, onDelete, onEdit, onRemind }:
   const reveal = Math.min(Math.abs(dx) / THRESHOLD, 1)
 
   return (
-    <li className={'task-wrap' + (leaving ? ' leaving' : '')}>
+    <li
+      ref={sortable.setNodeRef}
+      className={'task-wrap' + (leaving ? ' leaving' : '') + (sortable.isDragging ? ' sorting' : '')}
+      style={{ transform: CSS.Transform.toString(sortable.transform), transition: sortable.transition }}
+    >
       <div className="task-bg" style={{ opacity: reveal }}>🗑 מחק</div>
       <div
         className={'task' + (task.done ? ' done' : '') + (dragging ? ' dragging' : '')}
@@ -73,10 +81,18 @@ export default function TaskItem({ task, onToggle, onDelete, onEdit, onRemind }:
               {task.title}
             </span>
           )}
-          {task.remind_at && !task.done && <span className="chip">⏰ {formatRemind(task.remind_at)}</span>}
+          {task.remind_at && !task.done && (
+            <span className="chip">
+              {task.repeat ? '🔁' : '⏰'} {formatRemind(task.remind_at)}{task.repeat ? ` · ${REPEAT_LABELS[task.repeat]}` : ''}
+            </span>
+          )}
         </div>
         <button className={'icon-btn bell' + (task.remind_at ? ' on' : '')} onClick={onRemind} aria-label="תזכורת">🔔</button>
         <button className="icon-btn del" onClick={onDelete} aria-label="מחק משימה">✕</button>
+        <button
+          className="icon-btn handle" ref={sortable.setActivatorNodeRef}
+          {...sortable.attributes} {...sortable.listeners} aria-label="גרור לסידור מחדש" title="גרור לסידור מחדש"
+        >⠿</button>
       </div>
     </li>
   )

@@ -1,4 +1,6 @@
 import { useState } from 'react'
+import { SortableContext, horizontalListSortingStrategy, useSortable } from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
 import { COLORS, type Page } from '../types'
 
 type Props = {
@@ -10,27 +12,40 @@ type Props = {
   onDelete: (id: string) => void
 }
 
+function SortableTab({ page, active, onClick }: { page: Page; active: boolean; onClick: () => void }) {
+  const s = useSortable({ id: page.id, data: { type: 'page' } })
+  const c = COLORS[page.color] ?? COLORS.violet
+  return (
+    <button
+      ref={s.setNodeRef} {...s.attributes} {...s.listeners}
+      role="tab" aria-selected={active}
+      className={'tab' + (active ? ' active' : '') + (s.isDragging ? ' sorting' : '')}
+      style={{
+        ['--c' as string]: c.hex, ['--soft' as string]: c.soft,
+        transform: CSS.Transform.toString(s.transform), transition: s.transition,
+      }}
+      onClick={onClick}
+      title={active ? 'לחץ שוב לעריכת הדף · גרור לסידור' : 'גרור לסידור'}
+    >
+      <span className="dot" />{page.name}
+    </button>
+  )
+}
+
 export default function Tabs({ pages, activeId, onSelect, onAdd, onUpdate, onDelete }: Props) {
   const [dialog, setDialog] = useState<null | { mode: 'add' } | { mode: 'edit'; page: Page }>(null)
 
   return (
     <>
       <nav className="tabs" role="tablist">
-        {pages.map(p => {
-          const c = COLORS[p.color] ?? COLORS.violet
-          const active = p.id === activeId
-          return (
-            <button
-              key={p.id} role="tab" aria-selected={active}
-              className={'tab' + (active ? ' active' : '')}
-              style={{ ['--c' as string]: c.hex, ['--soft' as string]: c.soft }}
-              onClick={() => (active ? setDialog({ mode: 'edit', page: p }) : onSelect(p.id))}
-              title={active ? 'לחץ שוב לעריכת הדף' : undefined}
-            >
-              <span className="dot" />{p.name}
-            </button>
-          )
-        })}
+        <SortableContext items={pages.map(p => p.id)} strategy={horizontalListSortingStrategy}>
+          {pages.map(p => (
+            <SortableTab
+              key={p.id} page={p} active={p.id === activeId}
+              onClick={() => (p.id === activeId ? setDialog({ mode: 'edit', page: p }) : onSelect(p.id))}
+            />
+          ))}
+        </SortableContext>
         <button className="tab add" onClick={() => setDialog({ mode: 'add' })} aria-label="דף חדש">+</button>
       </nav>
       {dialog && (
