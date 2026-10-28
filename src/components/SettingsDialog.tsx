@@ -60,6 +60,19 @@ export default function SettingsDialog({ settings, userId, onChange, onClose }: 
         <h3>הגדרות</h3>
 
         <div className="setting">
+          <label>מראה</label>
+          <Choice
+            value={settings.theme}
+            onPick={theme => onChange({ theme })}
+            options={[
+              { id: 'auto', label: 'אוטומטי', hint: 'לפי המכשיר' },
+              { id: 'light', label: 'בהיר', hint: '☀️' },
+              { id: 'dark', label: 'כהה', hint: '🌙' },
+            ]}
+          />
+        </div>
+
+        <div className="setting">
           <label>פריסת הכותרות</label>
           <Choice
             value={settings.layout}
