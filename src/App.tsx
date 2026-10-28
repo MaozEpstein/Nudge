@@ -10,6 +10,7 @@ import { useData } from './lib/useData'
 import { useReminders } from './lib/reminders'
 import { beforeIdFor, nextOccurrence } from './lib/recurrence'
 import { useCollapsed, useSettings } from './lib/settings'
+import { useFlip } from './lib/flip'
 import { COLORS, type Repeat, type Task } from './types'
 import Login from './components/Login'
 import Tabs from './components/Tabs'
@@ -53,7 +54,7 @@ const collide: CollisionDetection = args => {
 }
 
 type Toast = { message: string; undo?: () => void }
-type Ghost = { kind: 'task' | 'section' | 'page'; label: string }
+type Ghost = { kind: 'task' | 'section' | 'page'; html: string; width: number; height: number }
 
 function Board({ userId, email }: { userId: string; email?: string }) {
   const data = useData(userId)
@@ -71,6 +72,9 @@ function Board({ userId, email }: { userId: string; email?: string }) {
   const [showSearch, setShowSearch] = useState(false)
   const [showQuick, setShowQuick] = useState(false)
   const [ghost, setGhost] = useState<Ghost | null>(null)
+  const dragging = useRef(false)
+  const dropped = useRef<string | null>(null)
+  useFlip(dragging, dropped)
 
   const active = pages.find(p => p.id === activeId) ?? pages[0] ?? null
   useEffect(() => {
@@ -129,19 +133,29 @@ function Board({ userId, email }: { userId: string; email?: string }) {
     useSensor(TouchSensor, { activationConstraint: { delay: 220, tolerance: 8 } }),
   )
 
+  // The floating copy that follows the pointer is a clone of the dragged element, so it looks identical.
   const onDragStart = (e: DragStartEvent) => {
     const type = e.active.data.current?.type as Ghost['kind'] | undefined
-    const id = String(e.active.id)
-    const label =
-      type === 'task' ? tasks.find(t => t.id === id)?.title
-      : type === 'section' ? sections.find(s => s.id === id)?.title
-      : pages.find(p => p.id === id)?.name
-    if (type && label) setGhost({ kind: type, label })
+    const node = document.querySelector<HTMLElement>(`[data-flip="${CSS.escape(String(e.active.id))}"]`)
+    if (!type || !node) return
+    dragging.current = true
+    const clone = node.cloneNode(true) as HTMLElement
+    clone.classList.remove('sorting', 'drop-over')
+    clone.removeAttribute('style')
+    const r = e.active.rect.current.initial ?? node.getBoundingClientRect()
+    setGhost({ kind: type, html: clone.outerHTML, width: r.width, height: r.height })
+  }
+
+  const endDrag = (id: string | null) => {
+    dragging.current = false
+    dropped.current = id
+    setGhost(null)
+    if (id) window.setTimeout(() => { if (dropped.current === id) dropped.current = null }, 500)
   }
 
   const onDragEnd = (e: DragEndEvent) => {
-    setGhost(null)
     const { active: a, over } = e
+    endDrag(String(a.id))
     if (!over || a.id === over.id) return
     const type = a.data.current?.type
     const id = String(a.id)
@@ -167,7 +181,7 @@ function Board({ userId, email }: { userId: string; email?: string }) {
   }
 
   return (
-    <DndContext sensors={sensors} collisionDetection={collide} onDragStart={onDragStart} onDragEnd={onDragEnd} onDragCancel={() => setGhost(null)}>
+    <DndContext sensors={sensors} collisionDetection={collide} onDragStart={onDragStart} onDragEnd={onDragEnd} onDragCancel={() => endDrag(null)}>
       <div
         className={`app layout-${settings.layout} density-${settings.density}`}
         style={{ ['--c' as string]: color.hex, ['--soft-l' as string]: color.soft, ['--ink-l' as string]: color.ink }}
@@ -300,11 +314,16 @@ function Board({ userId, email }: { userId: string; email?: string }) {
             {toast.undo && <button onClick={() => { toast.undo?.(); setToast(null) }}>↩ בטל</button>}
           </div>
         )}
-      </div>
 
-      <DragOverlay dropAnimation={null}>
-        {ghost && <div className={'drag-ghost ' + ghost.kind} style={{ ['--c' as string]: color.hex }}>{ghost.label}</div>}
-      </DragOverlay>
+        <DragOverlay>
+          {ghost && (
+            <div
+              className={'drag-clone ' + ghost.kind} style={{ width: ghost.width, height: ghost.height }}
+              dangerouslySetInnerHTML={{ __html: ghost.html }}
+            />
+          )}
+        </DragOverlay>
+      </div>
     </DndContext>
   )
 }

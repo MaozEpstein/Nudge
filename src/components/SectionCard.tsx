@@ -33,7 +33,7 @@ export default function SectionCard(p: Props) {
 
   return (
     <section
-      ref={node => { sortable.setNodeRef(node); drop.setNodeRef(node) }}
+      ref={node => { sortable.setNodeRef(node); drop.setNodeRef(node) }} data-flip={p.section.id}
       className={'card' + (p.collapsed ? ' collapsed' : '') + (sortable.isDragging ? ' sorting' : '') + (drop.isOver ? ' drop-over' : '')}
       style={{ transform: CSS.Transform.toString(sortable.transform), transition: sortable.transition }}
     >

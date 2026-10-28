@@ -101,7 +101,7 @@ h1, h2, h3, p { margin: 0; }
 .card {
   background: var(--surface); border-radius: var(--radius); box-shadow: var(--shadow);
   padding: 16px 16px 10px; margin-bottom: 16px; border-top: 5px solid var(--c);
-  animation: pop 0.3s ease both;
+  animation: pop 0.3s ease backwards;
 }
 @keyframes pop { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
 .card-head { display: flex; align-items: center; gap: 10px; }
@@ -161,7 +161,7 @@ h1, h2, h3, p { margin: 0; }
 .reminder-banner {
   display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap;
   background: linear-gradient(90deg, #ffe9a8, #ffd6e8); color: #4a2b3b; border-radius: 16px; padding: 12px 14px; margin-bottom: 12px;
-  box-shadow: var(--shadow); animation: pop 0.3s ease both;
+  box-shadow: var(--shadow); animation: pop 0.3s ease backwards;
 }
 .banner-actions { display: flex; gap: 6px; }
 .banner-actions button { background: rgba(255, 255, 255, 0.7); padding: 6px 14px; border-radius: 10px; font-weight: 600; }
@@ -174,14 +174,14 @@ h1, h2, h3, p { margin: 0; }
 .toast {
   position: fixed; bottom: calc(24px + env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%);
   background: #2b2540; color: #fff; padding: 12px 18px; border-radius: 16px; display: flex; gap: 16px; align-items: center;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3); animation: pop 0.25s ease both; z-index: 30;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3); animation: pop 0.25s ease backwards; z-index: 30;
 }
 .toast button { color: #ffd66b; font-weight: 700; }
 
 /* dialogs */
 .overlay { position: fixed; inset: 0; background: rgba(30, 20, 60, 0.45); backdrop-filter: blur(4px); display: grid; place-items: center; z-index: 20; padding: 16px; animation: fade 0.2s; }
 @keyframes fade { from { opacity: 0; } }
-.dialog { background: var(--surface); border-radius: 24px; padding: 22px; width: 100%; max-width: 380px; display: flex; flex-direction: column; gap: 14px; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3); animation: pop 0.25s ease both; }
+.dialog { background: var(--surface); border-radius: 24px; padding: 22px; width: 100%; max-width: 380px; display: flex; flex-direction: column; gap: 14px; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3); animation: pop 0.25s ease backwards; }
 .dialog input[type='text'], .dialog input:not([type]), .dialog input[type='datetime-local'] {
   border: 2px solid var(--line); border-radius: 14px; padding: 12px 14px; background: transparent; width: 100%;
 }
@@ -348,3 +348,10 @@ h1, h2, h3, p { margin: 0; }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) .card { background: linear-gradient(180deg, color-mix(in srgb, var(--c) 7%, var(--surface)), var(--surface) 90px); }
 }
+
+/* ---- smooth drag: the floating copy is a lifted clone of the dragged element ---- */
+.drag-clone { cursor: grabbing; pointer-events: none; transform: scale(1.025) rotate(0.6deg); filter: drop-shadow(0 18px 28px rgba(20, 20, 40, 0.28)); }
+.drag-clone.task { background: var(--surface); border-radius: 14px; }
+.drag-clone.page { border-radius: 999px; }
+.drag-clone .task-wrap { margin: 0; }
+.drag-clone .card { margin: 0; animation: none; height: 100%; }

@@ -17,7 +17,7 @@ function SortableTab({ page, active, onClick }: { page: Page; active: boolean; o
   const c = COLORS[page.color] ?? COLORS.violet
   return (
     <button
-      ref={s.setNodeRef} {...s.attributes} {...s.listeners}
+      ref={s.setNodeRef} {...s.attributes} {...s.listeners} data-flip={page.id}
       role="tab" aria-selected={active}
       className={'tab' + (active ? ' active' : '') + (s.isDragging ? ' sorting' : '')}
       style={{

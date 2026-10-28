@@ -56,7 +56,7 @@ export default function TaskItem({ task, onToggle, onDelete, onEdit, onRemind }:
 
   return (
     <li
-      ref={sortable.setNodeRef}
+      ref={sortable.setNodeRef} data-flip={task.id}
       className={'task-wrap' + (leaving ? ' leaving' : '') + (sortable.isDragging ? ' sorting' : '')}
       style={{ transform: CSS.Transform.toString(sortable.transform), transition: sortable.transition }}
     >
